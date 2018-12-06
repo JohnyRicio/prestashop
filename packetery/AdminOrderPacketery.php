@@ -28,14 +28,14 @@ class AdminOrderPacketery extends AdminTab
         $this->ensureInitialized();
         parent::__construct();
     }
-    
+
     private $initialized = false;
     private function ensureInitialized()
     {
         if ($this->initialized) {
             return;
         }
-        
+
         $this->table = 'packetery_order';
         $this->packetery = new Packetery();
 
@@ -48,19 +48,19 @@ class AdminOrderPacketery extends AdminTab
         $this->ensureInitialized();
         return $this->packetery->l($str, $class, $addslashes, $htmlentities);
     }
-    
+
     private function csvEscape($s)
     {
         return str_replace('"', '""', $s);
     }
-    
+
     public function exportCsv()
     {
         header("Content-Type: text/csv");
         header("Content-Disposition: attachment; filename=\"export-" . date("Ymd-His") . ".csv\"");
 
         $db = Db::getInstance();
-        
+
         $is_cods = (is_array(Tools::getValue('packetery_order_is_cod')) ? Tools::getValue('packetery_order_is_cod') : array());
         foreach ($is_cods as $id => $is_cod) {
             $db->execute(
@@ -68,7 +68,7 @@ class AdminOrderPacketery extends AdminTab
                 ((int) $is_cod) . ' where id_order=' . ((int) $id)
             );
         }
-        
+
         $ids = array_map(
             'floor',
             is_array(Tools::getValue('packetery_order_id')) &&
@@ -86,7 +86,7 @@ class AdminOrderPacketery extends AdminTab
                 join `'._DB_PREFIX_.'address` a on(a.id_address=o.id_address_delivery)
             where o.id_order in (' . implode(',', $ids) . ')'
         );
-        
+
         $cnb_rates = null;
         foreach ($data as $order) {
             $phone = "";
@@ -151,10 +151,10 @@ class AdminOrderPacketery extends AdminTab
         $db->execute(
             'update `'._DB_PREFIX_.'packetery_order` set exported=1 where id_order in(' . implode(',', $ids) . ')'
         );
-        
+
         exit();
     }
-    
+
     public function display()
     {
         echo '<h2>' . $this->l('Packetery Order Export') . '</h2>';
@@ -245,8 +245,8 @@ class AdminOrderPacketery extends AdminTab
         ) . "</p>";
         echo "</fieldset>";
         echo "</form>";
-        echo "<script type='text/javascript' src='//www.zasilkovna.cz/api/" .
-            Configuration::get('PACKETERY_API_KEY') . "/branch.js?sync_load=1&amp;prestashop=1'></script>";
+        echo '<script type=\'text/javascript\' src=\'//www.zasilkovna.cz/api/' .
+            Configuration::get('PACKETERY_API_KEY') . '/branch.js?sync_load=1&amp;prestashop=1&amp;version=' . md5($this->packetery->getVersion()) . '\'></script>';
         echo '
 <script type="text/javascript">
   window.packetery.jQuery(function() {

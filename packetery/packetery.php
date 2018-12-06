@@ -27,7 +27,7 @@ class Packetery extends Module
     {
         $this->name = 'packetery';
         $this->tab = 'shipping_logistics';
-        $this->version = '1.18';
+        $this->version = '1.19';
         $this->limited_countries = array('cz', 'sk', 'pl', 'hu', 'de', 'ro');
         parent::__construct();
 
@@ -553,7 +553,7 @@ class Packetery extends Module
 
         if (!$this->configuration_errors()) {
             $html .= "<script type='text/javascript' src='//www.zasilkovna.cz/api/" .
-                Configuration::get('PACKETERY_API_KEY') . "/branch.js?sync_load=1&amp;prestashop=1'></script>";
+                Configuration::get('PACKETERY_API_KEY') . "/branch.js?sync_load=1&amp;prestashop=1&amp;" . md5($this->getVersion()) . "'></script>";
             $html .= '
 <script type="text/javascript">
   window.packetery.jQuery(function() {
@@ -1254,7 +1254,7 @@ window.packetery.jQuery(function() {
         }
 
         $this->ensureUpdatedAPI();
-        return '<script type="text/javascript" src="' . _MODULE_DIR_ . 'packetery/views/js/api.js"></script>';
+        return '<script type="text/javascript" src="' . _MODULE_DIR_ . 'packetery/views/js/api.js?version='.md5($this->getVersion()).'"></script>';
     }
 
     private function fetch($url)
@@ -1319,13 +1319,13 @@ window.packetery.jQuery(function() {
         $files = array(
             _PS_MODULE_DIR_ . "packetery/views/js/api.js" =>
                 "http://www.zasilkovna.cz/api/v3/$key/branch.js?lib_path=" . _MODULE_DIR_ .
-                "packetery&sync_load=1&prestashop=1",
+                "packetery&sync_load=1&prestashop=1&version=".md5($this->getVersion()),
             _PS_MODULE_DIR_ . "packetery/address-delivery.xml" =>
-                "http://www.zasilkovna.cz/api/v3/$key/branch.xml?type=address-delivery"
+                "http://www.zasilkovna.cz/api/v3/$key/branch.xml?type=address-delivery&version=".md5($this->getVersion())
         );
 
         foreach ($files as $local => $remote) {
-            if (date("d.m.Y", @filemtime($local)) != date("d.m.Y") && (!file_exists($local) || date("H") >= 1)) {
+            if ((!file_exists($local)) || date('d.m.Y H', @filemtime($local)) !== date('d.m.Y H')) {
                 if ($this->configuration_errors() || Tools::strlen($data = $this->fetch($remote)) <= 1024) {
                     // if we have older data, then try again tomorrow and delete after 5 days
                     // else keep trying with each load
@@ -1408,6 +1408,11 @@ window.packetery.jQuery(function() {
                 "</div>";
             }
         }
+    }
+
+    public function getVersion()
+    {
+        return $this->version;
     }
 }
 
